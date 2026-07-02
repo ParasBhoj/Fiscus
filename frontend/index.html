@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiscus — Regulatory Intelligence</title>
+<meta name="description" content="AI-powered real-time monitoring of RBI & SEBI regulatory updates with semantic search.">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- MAIN HEADER -->
+  <div class="header-wrap" id="headerWrap">
+    <div class="header" id="mainHeader">
+      <div class="logo">Fiscus</div>
+    </div>
+  </div>
+
+  <!-- DETAIL HEADER -->
+  <div class="header" id="detailHeader" style="display:none;">
+    <button class="back-btn" onclick="goBack()" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <button class="icon-btn" id="detailSourceBtn" onclick="openSourceUrl()" aria-label="Open source">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </button>
+  </div>
+
+  <!-- FILTER PILLS -->
+  <div class="filters" id="filters">
+    <button class="pill active" data-filter="all" onclick="setFilter('all')">All News</button>
+    <button class="pill" data-filter="RBI" onclick="setFilter('RBI')">RBI Updates</button>
+    <button class="pill" data-filter="SEBI" onclick="setFilter('SEBI')">SEBI Orders</button>
+    <button class="pill" data-filter="High" onclick="setFilter('High')">🔴 High Impact</button>
+    <button class="pill" data-filter="Medium" onclick="setFilter('Medium')">🟡 Medium</button>
+    <button class="pill" data-filter="Low" onclick="setFilter('Low')">🟢 Low</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content"></div>
+
+  <!-- BOTTOM SEARCH BAR -->
+  <div class="bottom-search-bar" id="bottomSearchBar">
+    <div class="search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="bottomSearchInput" placeholder="Search with AI (e.g. 'rules for farmers')..." onkeypress="if(event.key==='Enter') handleSearch()">
+    </div>
+    <button class="search-close-btn" onclick="toggleSearch()" aria-label="Close search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- SEARCH FAB -->
+  <button class="search-fab" id="searchFab" onclick="toggleSearch()" aria-label="Search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </button>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottomNav">
+    <button class="nav-btn active" data-tab="feed" onclick="goTab('feed')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Feed
+    </button>
+    <button class="nav-btn" data-tab="saved" onclick="goTab('saved')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      Saved
+    </button>
+    <button class="nav-btn" data-tab="settings" onclick="goTab('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+  </div>
+
+</div>
+
+<script>
+/* ── SVG Icons ── */
+const chevronIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+const externalIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+const chevDownIcon = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+function bookmarkIcon(filled) {
+  return '<svg viewBox="0 0 24 24" fill="'+(filled?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+}
+
+/* ── State ── */
+let allData = [];
+let savedIds = JSON.parse(localStorage.getItem('fiscus_saved') || '[]');
+let state = {
+  tab: 'feed',
+  previousTab: 'feed',
+  filter: 'all',
+  searchOpen: false,
+  isSearchResult: false,
+  currentArticle: null,
+  theme: localStorage.getItem('fiscus_theme') || 'light',
+  refreshFreq: localStorage.getItem('fiscus_freq') || '60',
+  lastScrollTop: 0,
+};
+
+// Apply saved theme
+if (state.theme !== 'light') document.body.classList.add('theme-' + state.theme);
+
+/* ── API ── */
+async function fetchUpdates() {
+  try {
+    const res = await fetch('/api/updates?limit=100');
+    allData = await res.json();
+    render();
+  } catch (err) {
+    document.getElementById('content').innerHTML =
+      '<div class="empty-state"><div class="e-title">Connection Error</div><div class="e-sub">Could not reach the API server. Is it running?</div></div>';
+  }
+}
+
+async function apiSearch(query) {
+  const res = await fetch('/api/search?q=' + encodeURIComponent(query));
+  return res.json();
+}
+
+/* ── Helpers ── */
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+function isSaved(id) { return savedIds.includes(id); }
+function toggleSaveItem(id) {
+  if (isSaved(id)) savedIds = savedIds.filter(x => x !== id);
+  else savedIds.push(id);
+  localStorage.setItem('fiscus_saved', JSON.stringify(savedIds));
+  render();
+}
+
+function getFiltered() {
+  let list = allData;
+  if (state.filter === 'RBI' || state.filter === 'SEBI') {
+    list = list.filter(a => a.source === state.filter);
+  } else if (state.filter === 'High' || state.filter === 'Medium' || state.filter === 'Low') {
+    list = list.filter(a => a.regulatory_impact === state.filter);
+  }
+  return list;
+}
+
+/* ── Card HTML ── */
+function cardHTML(a) {
+  const badgeClass = a.source === 'RBI' ? 'RBI' : 'SEBI';
+  const impactClass = (a.regulatory_impact || 'unknown').toLowerCase();
+  const saved = isSaved(a.id);
+  const entities = (a.affected_entities || '').split(',').map(e => e.trim()).filter(e => e).slice(0, 2);
+
+  return `
+  <div class="news-item">
+    <div class="item-top" onclick='openDetail(${JSON.stringify(a.id)})'>
+      <div class="badge-row">
+        <span class="badge badge-${badgeClass}">${a.source}</span>
+        <span class="timestamp">${timeAgo(a.publishedAt)}</span>
+        ${a.score !== undefined ? `<span class="score-badge">${Math.round(a.score * 100)}% match</span>` : ''}
+      </div>
+      <h3 class="item-title">${a.title}</h3>
+      <p class="item-summary">${a.summary || ''}</p>
+    </div>
+    <div class="item-footer">
+      <div class="footer-left">
+        <div class="impact-btn">
+          <span class="dot ${impactClass}"></span>
+          <span>${a.regulatory_impact || 'Unknown'}</span>
+        </div>
+        <button class="save-btn ${saved ? 'active' : ''}" onclick="event.stopPropagation(); toggleSaveItem('${a.id}')" aria-label="Save">
+          ${bookmarkIcon(saved)}
+        </button>
+      </div>
+      <span class="read-link" onclick='openDetail(${JSON.stringify(a.id)})'>Read Full ${chevronIcon}</span>
+    </div>
+  </div>`;
+}
+
+/* ── Render: Feed ── */
+function renderFeed() {
+  const list = getFiltered();
+  if (list.length === 0) {
+    return `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="e-title">No updates found</div>
+      <div class="e-sub">Try a different filter or pull to refresh.</div>
+    </div>`;
+  }
+  return list.map(cardHTML).join('');
+}
+
+/* ── Render: Saved ── */
+function renderSaved() {
+  const saved = allData.filter(a => isSaved(a.id));
+  let html = '<div class="screen-title">Saved Articles</div>';
+  if (saved.length === 0) {
+    html += `<div class="empty-state">
+      ${bookmarkIcon(false)}
+      <div class="e-title">No saved articles yet</div>
+      <div class="e-sub">Tap the bookmark icon on any article to save it here.</div>
+    </div>`;
+  } else {
+    html += saved.map(cardHTML).join('');
+  }
+  return html;
+}
+
+/* ── Render: Settings ── */
+function renderSettings() {
+  const themeOptions = [{id:'light',name:'Light'},{id:'dark',name:'Dark'},{id:'midnight',name:'Midnight'}];
+  const freqOptions = [{id:'15',name:'15 min'},{id:'30',name:'30 min'},{id:'60',name:'1 hour'},{id:'manual',name:'Manual'}];
+  const themeLabel = themeOptions.find(t => t.id === state.theme).name;
+  const freqLabel = freqOptions.find(f => f.id === state.refreshFreq).name;
+
+  return `
+  <div class="screen-title">Settings</div>
+  <div class="settings-section">
+    <div class="settings-heading">Preferences</div>
+    <div class="setting-row">
+      <div><div class="s-name">Theme</div><div class="s-sub">Choose how Fiscus looks</div></div>
+      <div class="custom-select" id="themeSelect" onclick="toggleDropdown('themeSelect', event)">
+        <span class="dot ${state.theme}"></span><span>${themeLabel}</span>${chevDownIcon}
+        <div class="dropdown-panel" id="themeSelectPanel">
+          ${themeOptions.map(t => `<div class="dropdown-option ${state.theme===t.id?'selected':''}" onclick="selectTheme('${t.id}', event)"><span class="dot ${t.id}"></span>${t.name}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="settings-heading">Data</div>
+    <div class="setting-row">
+      <div><div class="s-name">Refresh Frequency</div><div class="s-sub">How often the daemon polls for new circulars</div></div>
+      <div class="custom-select" id="freqSelect" onclick="toggleDropdown('freqSelect', event)">
+        <span>${freqLabel}</span>${chevDownIcon}
+        <div class="dropdown-panel" id="freqSelectPanel">
+          ${freqOptions.map(f => `<div class="dropdown-option ${state.refreshFreq===f.id?'selected':''}" onclick="selectFrequency('${f.id}', event)">${f.name}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="settings-heading">About</div>
+    <div class="setting-row" style="cursor:default;">
+      <div><div class="s-name">Fiscus v1.0</div><div class="s-sub">AI-Powered Regulatory Intelligence Platform</div></div>
+    </div>
+  </div>`;
+}
+
+/* ── Render: Detail ── */
+function renderDetail() {
+  const a = state.currentArticle;
+  if (!a) return '';
+  const saved = isSaved(a.id);
+  const entities = (a.affected_entities || '').split(',').map(e => e.trim()).filter(e => e);
+  const impactClass = (a.regulatory_impact || 'unknown').toLowerCase();
+
+  return `
+  <div class="detail-wrap">
+    <div class="badge-row">
+      <span class="badge badge-${a.source === 'RBI' ? 'RBI' : 'SEBI'}">${a.source}</span>
+      <span class="timestamp">${formatDate(a.publishedAt)}</span>
+    </div>
+    <h1 class="detail-title">${a.title}</h1>
+    <div class="meta-box">
+      <div class="tier-label">AI-Verified Regulatory Source</div>
+      <div class="meta-row"><span class="m-label">Impact</span><span class="m-value"><span class="dot ${impactClass}" style="display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:4px;"></span>${a.regulatory_impact || 'Unknown'}</span></div>
+      <div class="meta-row"><span class="m-label">Source</span><span class="m-value link" onclick="window.open('${a.url}','_blank')">${(a.url || '').replace(/https?:\/\//, '').substring(0, 40)}… ${externalIcon}</span></div>
+      ${entities.length ? `<div class="meta-row"><span class="m-label">Affects</span><span class="m-value">${entities.join(', ')}</span></div>` : ''}
+    </div>
+    <div class="detail-actions">
+      <div class="impact-btn"><span class="dot ${impactClass}"></span><span>${a.regulatory_impact || 'Unknown'} Impact</span></div>
+      <button class="save-btn ${saved ? 'active' : ''}" onclick="toggleSaveItem('${a.id}')" aria-label="Save">${bookmarkIcon(saved)}</button>
+    </div>
+    ${a.summary ? `<div class="summary-box"><div class="s-label">AI Summary</div><div class="s-text">${a.summary}</div></div>` : ''}
+    <div class="body-text">
+      ${(a.raw_text || 'Full text not available. Tap the external link above to read on the original website.').split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('')}
+    </div>
+    <div class="disclaimer"><b>Disclaimer:</b> This content is sourced directly from official regulatory feeds and processed by AI for summarisation. For authoritative interpretations, refer to the original source document.</div>
+  </div>`;
+}
+
+/* ── Main Render ── */
+function render() {
+  const content = document.getElementById('content');
+  const filters = document.getElementById('filters');
+  const headerWrap = document.getElementById('headerWrap');
+  const detailHeader = document.getElementById('detailHeader');
+  const bottomNav = document.getElementById('bottomNav');
+
+  if (state.tab === 'detail') {
+    headerWrap.style.display = 'none';
+    detailHeader.style.display = 'flex';
+    filters.style.display = 'none';
+    content.innerHTML = renderDetail();
+  } else {
+    headerWrap.style.display = 'block';
+    detailHeader.style.display = 'none';
+    if (state.tab === 'feed') {
+      filters.style.display = 'flex';
+      content.innerHTML = renderFeed();
+    } else if (state.tab === 'saved') {
+      filters.style.display = 'none';
+      content.innerHTML = renderSaved();
+    } else if (state.tab === 'settings') {
+      filters.style.display = 'none';
+      content.innerHTML = renderSettings();
+    }
+  }
+
+  // Nav active state
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === state.tab || (state.tab === 'detail' && btn.dataset.tab === state.previousTab));
+  });
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.filter === state.filter);
+  });
+  updateSearchVisibility();
+}
+
+/* ── Navigation ── */
+function goTab(tab) {
+  state.tab = tab;
+  state.previousTab = tab;
+  if (tab === 'feed' && state.isSearchResult) {
+    state.isSearchResult = false;
+    fetchUpdates();
+  }
+  if (tab === 'settings') { state.searchOpen = false; }
+  render();
+  document.getElementById('content').scrollTop = 0;
+}
+
+function openDetail(id) {
+  const item = allData.find(a => a.id === id);
+  if (!item) return;
+  state.previousTab = state.tab === 'detail' ? state.previousTab : state.tab;
+  state.currentArticle = item;
+  state.tab = 'detail';
+  state.searchOpen = false;
+  render();
+  document.getElementById('content').scrollTop = 0;
+}
+
+function goBack() {
+  state.tab = state.previousTab;
+  render();
+}
+
+function setFilter(f) {
+  state.filter = f;
+  if (state.isSearchResult) {
+    state.isSearchResult = false;
+    fetchUpdates();
+    return;
+  }
+  render();
+  document.getElementById('content').scrollTop = 0;
+}
+
+function openSourceUrl() {
+  if (state.currentArticle && state.currentArticle.url) {
+    window.open(state.currentArticle.url, '_blank');
+  }
+}
+
+/* ── Search ── */
+function toggleSearch() {
+  state.searchOpen = !state.searchOpen;
+  if (!state.searchOpen) {
+    document.getElementById('bottomSearchInput').value = '';
+    if (state.isSearchResult) {
+      state.isSearchResult = false;
+      fetchUpdates();
+    }
+  }
+  render();
+  if (state.searchOpen) {
+    setTimeout(() => document.getElementById('bottomSearchInput').focus(), 60);
+  }
+}
+
+async function handleSearch() {
+  const q = document.getElementById('bottomSearchInput').value.trim();
+  if (q.length < 2) return;
+
+  document.getElementById('content').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+  try {
+    const results = await apiSearch(q);
+    allData = results;
+    state.isSearchResult = true;
+    state.filter = 'all';
+    render();
+  } catch (err) {
+    document.getElementById('content').innerHTML = '<div class="empty-state"><div class="e-title">Search failed</div><div class="e-sub">Could not reach the server.</div></div>';
+  }
+}
+
+function updateSearchVisibility() {
+  const fab = document.getElementById('searchFab');
+  const bar = document.getElementById('bottomSearchBar');
+  const relevant = (state.tab === 'feed' || state.tab === 'saved');
+  if (!relevant) {
+    fab.classList.add('hidden');
+    bar.classList.remove('open');
+    return;
+  }
+  if (state.searchOpen) {
+    fab.classList.add('hidden');
+    bar.classList.add('open');
+  } else {
+    fab.classList.remove('hidden');
+    bar.classList.remove('open');
+  }
+}
+
+/* ── Header Collapse on Scroll ── */
+document.getElementById('content').addEventListener('scroll', function() {
+  if (state.tab !== 'feed') return;
+  const st = this.scrollTop;
+  const wrap = document.getElementById('headerWrap');
+  if (st > state.lastScrollTop && st > 30) wrap.classList.add('collapsed');
+  else if (st < state.lastScrollTop - 2 || st <= 0) wrap.classList.remove('collapsed');
+  state.lastScrollTop = st < 0 ? 0 : st;
+});
+
+/* ── Theme & Settings ── */
+function setTheme(theme) {
+  state.theme = theme;
+  document.body.classList.remove('theme-dark', 'theme-midnight');
+  if (theme !== 'light') document.body.classList.add('theme-' + theme);
+  localStorage.setItem('fiscus_theme', theme);
+  render();
+}
+function selectTheme(id, ev) { ev.stopPropagation(); setTheme(id); }
+function selectFrequency(id, ev) {
+  ev.stopPropagation();
+  state.refreshFreq = id;
+  localStorage.setItem('fiscus_freq', id);
+  render();
+}
+function toggleDropdown(id, ev) {
+  ev.stopPropagation();
+  const panel = document.getElementById(id + 'Panel');
+  const trigger = document.getElementById(id);
+  const isOpen = panel.classList.contains('show');
+  closeAllDropdowns();
+  if (!isOpen) { panel.classList.add('show'); trigger.classList.add('open'); }
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown-panel').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+}
+document.addEventListener('click', closeAllDropdowns);
+
+/* ── Init ── */
+document.getElementById('content').innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+fetchUpdates();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+feedparser
+playwright
+trafilatura
+beautifulsoup4
+openai
+google-genai
+numpy
+pydantic
+python-dotenv
+python-dateutil
+rich

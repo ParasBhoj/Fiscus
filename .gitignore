@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Environment & Secrets
+.env
+*.db
+
+# Node / Expo
+node_modules/
+regwatch-mobile/node_modules/
+regwatch-mobile/.expo/
+regwatch-mobile/dist/
+regwatch-mobile/android/
+regwatch-mobile/ios/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+.gemini/
+regulatory_updates.json
